@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { ChakraProvider } from "@chakra-ui/react";
+import Navbar from "@/components/Navbar";
+import { getCurrentSession } from "@/lib/session";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -18,18 +21,21 @@ export const metadata: Metadata = {
   description: "Discover underground songs!",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+const RootLayout = async ({ children }) => {
+  const session = await getCurrentSession();
+
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-stone-200`}>
+        <ChakraProvider>
+          <Navbar session={session} />
+          <div className="flex h-full w-full">
+            {children}
+          </div>
+        </ChakraProvider>
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;
