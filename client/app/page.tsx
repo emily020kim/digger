@@ -1,15 +1,18 @@
+import Landing from '@/components/Landing';
 import { getCurrentUser } from '../lib/session';
 
-export default function Home() {
-  const user = getCurrentUser();
+const Home = async () => {
+  const user = await getCurrentUser();
 
   return user ? (
     <div>
-      {/** page if they are signed in */}
+      <h1>placeholder</h1>
     </div>
   ) : (
-    <div>
-      {/** landing page */}
+    <div className='flex flex-col'>
+      <Landing />
     </div>
   );
 };
+
+export default Home;

@@ -27,12 +27,14 @@ const RootLayout = async ({ children }) => {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-stone-200`}>
-        <ChakraProvider>
-          <Navbar session={session} />
-          <div className="flex h-full w-full">
-            {children}
-          </div>
-        </ChakraProvider>
+        <main className="flex flex-col w-full h-full">
+          <ChakraProvider>
+            <Navbar session={session} />
+            <div className="flex-grow w-full">
+              {children}
+            </div>
+          </ChakraProvider>
+        </main>
       </body>
     </html>
   );
