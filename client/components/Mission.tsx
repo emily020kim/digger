@@ -44,7 +44,7 @@ const Mission = () => {
             Receive a new playlist every week
           </h1>
           <p className="text-lg font-medium">
-            A new playlist consisting of the top 15 tracks with the most votes will be generated every week.
+            A playlist of the top 15 tracks with the most votes will be generated every week.
           </p>
         </div>
       </div>

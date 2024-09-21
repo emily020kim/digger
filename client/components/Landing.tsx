@@ -1,9 +1,13 @@
+"use client"
+
+import Footer from "./Footer";
 import Mission from "./Mission";
+import Waitlist from "./Waitlist";
 
 const Landing = () => {
   return (
     <>
-      <div className="flex w-full h-screen">
+      <div className="flex justify-center w-full h-screen">
         <div className="flex flex-col w-1/2 items-center justify-center px-8">
           <h1 className="text-6xl font-bold mb-28">
             Discover new music with Diggr
@@ -20,6 +24,8 @@ const Landing = () => {
         </div>
       </div>
       <Mission />
+      <Waitlist />
+      <Footer />
     </>
   )
 };
