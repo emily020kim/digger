@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { signIn, signOut, getProviders } from "next-auth/react";
 import { CiMenuFries } from "react-icons/ci";
 import Image from "next/image";
 import { Session } from "next-auth";
@@ -66,8 +67,11 @@ const Navbar: React.FC<NavbarProps> = ({ session }: NavbarProps) => {
             </a>
           </div>
           <div className="flex">
-            <button className="text-sm md:text-base lg:text-lg text-white font-medium px-2 py-1 lg:px-3 lg:py-2 bg-cyan rounded-md hover:bg-opacity-75">
-              Sign Up
+            <button 
+              className="text-sm md:text-base lg:text-lg text-white font-medium px-2 py-1 lg:px-3 lg:py-2 bg-cyan rounded-md hover:bg-opacity-75"
+              onClick={() => signIn()}
+            >
+              Sign In
             </button>
           </div>
         </>
