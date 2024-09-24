@@ -6,6 +6,7 @@ import Image from "next/image";
 import doug1 from "../public/mouth_open.png";
 import Description from "./Description";
 import Features from "./Features";
+import Join from "./Join";
 
 const Landing = () => {
   const [size, setSize] = useState(300);
@@ -48,6 +49,7 @@ const Landing = () => {
       </div>
       <Description />
       <Features />
+      <Join />
     </>
   )
 };
