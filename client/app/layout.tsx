@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
-import "./globals.css";
+import { getCurrentSession } from "@/lib/session";
 import { ChakraProvider } from "@chakra-ui/react";
 import Navbar from "@/components/Navbar";
-import { getCurrentSession } from "@/lib/session";
+import Footer from "@/components/Footer";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Digger",
@@ -22,6 +22,7 @@ const RootLayout = async ({ children }) => {
             <div className="flex-grow w-full">
               {children}
             </div>
+            <Footer />
           </ChakraProvider>
         </main>
       </body>
