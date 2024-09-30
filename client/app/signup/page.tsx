@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from '../../lib/firebaseConfig';
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth, db } from "@/firebaseConfig";
+import { setDoc, doc, Timestamp } from "firebase/firestore";
 
 import Image from "next/image";
 import doug from '../../public/winking.png';
@@ -14,6 +15,8 @@ const SignupPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
+  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [isScreenLarge, setIsScreenLarge] = useState(true);
 
   const handleClick = () => setShow(!show);
@@ -28,36 +31,70 @@ const SignupPage = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  // validate email and password
+  const validateForm = () => {
+    if (!email.includes("@")) {
+      setErrorMessage("Please enter a valid email address.");
+      setError(true);
+      return false;
+    }
+    if (password.length < 6) {
+      setErrorMessage("Password should be at least 6 characters long.");
+      setError(true);
+      return false;
+    }
+    return true;
+  };
+
+  // Handle user sign up with email and password
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
     try {
-      // Create user with Firebase Authentication using the imported auth instance
+      // Create a new user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      // Get the Firebase ID token
-      const idToken = await userCredential.user.getIdToken();
+      // Save the username in Firebase Auth's profile
+      await updateProfile(user, { displayName: username });
 
-      // Call the backend to store additional user information
-      const response = await fetch("http://localhost:5147/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token: idToken,
-          username: username,
-        }),
+      console.log("User created with username:", username);
+
+      // add user to firestore
+      await setDoc(doc(db, "users", user.uid), {
+        username: username,
+        email: email,
+        created_at: Timestamp.now(),
       });
 
-      if (response.ok) {
-        // Navigate to the application page
-        console.log("Sign up successful");
-      } else {
-        console.error("Couldn't create account for: ", username);
-        console.error("Code: ", response.status);
+      console.log("User data saved to Firestore");
+
+      // TODO: Redirect to application main page after successful signup
+    } catch (err) {
+      const errorMessage = err.message;
+      const errorCode = err.code;
+
+      setError(true);
+
+      switch (errorCode) {
+        case "auth/weak-password":
+          setErrorMessage("The password is too weak.");
+          break;
+        case "auth/email-already-in-use":
+          setErrorMessage("This email address is already in use by another account.");
+          break;
+        case "auth/invalid-email":
+          setErrorMessage("This email address is invalid.");
+          break;
+        case "auth/operation-not-allowed":
+          setErrorMessage("Email/password accounts are not enabled.");
+          break;
+        default:
+          setErrorMessage(errorMessage);
+          break;
       }
-    } catch (error) {
-      console.error("Error creating user: ", error.message);
     }
   };
 
@@ -79,53 +116,63 @@ const SignupPage = () => {
             <p className="text-[#808080] text-sm mr-2">
               Already have an account?
             </p>
-            <a className="text-gold underline text-sm">
+            <a 
+              href="/signin"
+              className="text-gold underline text-sm"
+            >
               Login
             </a>
           </div>
-          <Input 
-            size='md'
-            placeholder='Username'
-            focusBorderColor='yellow.400'
-            _placeholder={{ opacity: 1, color: 'gray.500' }}
-            bg='blackAlpha.200'
-            mb={3}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <Input 
-            size='md'
-            placeholder='Email'
-            focusBorderColor='yellow.400'
-            _placeholder={{ opacity: 1, color: 'gray.500' }}
-            bg='blackAlpha.200'
-            mb={3}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <InputGroup size='md' mb={3}>
-            <Input
-              pr='4.5rem'
-              type={show ? 'text' : 'password'}
-              placeholder='Password'
-              bg='blackAlpha.200'
+          <form onSubmit={handleSubmit} className="flex flex-col items-center">
+            <Input 
+              size='md'
+              placeholder='Username'
               focusBorderColor='yellow.400'
               _placeholder={{ opacity: 1, color: 'gray.500' }}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              bg='blackAlpha.200'
+              mb={3}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
-            <InputRightElement width='4.5rem'>
-              <Button h='1.75rem' size='sm' onClick={handleClick}>
-                {show ? 'Hide' : 'Show'}
-              </Button>
-            </InputRightElement>
-          </InputGroup>
-          <button 
-            onClick={handleSubmit}
-            className="bg-gradient-to-r from-gold to-goldEnd rounded-full text-white font-semibold px-6 py-2 md:text-base mb-8"
-          >
-            Create account
-          </button>
+            <Input 
+              size='md'
+              placeholder='Email'
+              focusBorderColor='yellow.400'
+              _placeholder={{ opacity: 1, color: 'gray.500' }}
+              bg='blackAlpha.200'
+              mb={3}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <InputGroup size='md' mb={3}>
+              <Input
+                pr='4.5rem'
+                type={show ? 'text' : 'password'}
+                placeholder='Password'
+                bg='blackAlpha.200'
+                focusBorderColor='yellow.400'
+                _placeholder={{ opacity: 1, color: 'gray.500' }}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <InputRightElement width='4.5rem'>
+                <Button h='1.75rem' size='sm' onClick={handleClick}>
+                  {show ? 'Hide' : 'Show'}
+                </Button>
+              </InputRightElement>
+            </InputGroup>
+            <button 
+              type="submit"
+              className="bg-gradient-to-r from-gold to-goldEnd rounded-full text-white font-semibold px-6 py-2 md:text-base mb-8"
+            >
+              Create account
+            </button>
+          </form>
+          {error && (
+            <p className="text-red-600 text-sm mt-3">
+              {errorMessage}
+            </p>
+          )}
           <p className="text-sm font-medium text-[#808080] mb-10">
             Or register with
           </p>
