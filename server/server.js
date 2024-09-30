@@ -18,25 +18,20 @@ app.use(express.json());
 
 // Sign up route
 app.post('/signup', async (req, res) => {
-  const { username, email } = req.body;
-
+  const { token, username } = req.body;
+  
   try {
-    const userRecord = await admin.auth().createUser({
-      email: email,
-      displayName: username
-    });
-
-    await db.collection('users').doc(userRecord.uid).set({
+    // Verify token
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    
+    // Store user details in Firestore
+    await db.collection('users').doc(decodedToken.uid).set({
       username: username,
-      email: email
+      email: decodedToken.email
     });
 
-    res.status(201).send({ uid: userRecord.uid });
+    res.status(201).send({ uid: decodedToken.uid });
   } catch (error) {
-    if (error.code === 'auth/email-already-exists') {
-      return res.status(400).send({ error: 'A user with this email has already been created!' });
-    }
-
     res.status(400).send({ error: error.message });
   }
 });
@@ -64,18 +59,6 @@ app.post('/login', async (req, res) => {
 
   } catch (error) {
     res.status(401).send({ error: 'Invalid email or password' });
-  }
-});
-
-// Verify token
-app.post('/verify-token', async (req, res) => {
-  const { token } = req.body;
-
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
-    res.status(200).send({ uid: decodedToken.uid });
-  } catch (error) {
-    res.status(401).send({ error: 'Invalid token' });
   }
 });
 
