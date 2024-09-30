@@ -3,12 +3,18 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import doug from '../../public/winking.png';
-import { Input, InputGroup, InputRightElement, Button } from '@chakra-ui/react';
+import { Input, InputGroup, InputRightElement, Button, useToast } from '@chakra-ui/react';
 import GoogleAuth from "@/components/GoogleAuth";
+import { auth } from "@/firebaseConfig";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function LoginPage() {
   const [show, setShow] = useState(false);
   const [isScreenLarge, setIsScreenLarge] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
 
   const handleClick = () => setShow(!show);
 
@@ -20,6 +26,28 @@ export default function LoginPage() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const handleLogin = async () => {
+    setIsLoading(true);
+    
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log("successful login!");
+      // redirect to main application page
+    } catch (error) {
+      console.error("Login failed:" , error);
+      toast({
+        title: "Login failed",
+        description: error.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex w-full h-screen items-center justify-center">
@@ -50,6 +78,8 @@ export default function LoginPage() {
             _placeholder={{ opacity: 1, color: 'gray.500' }}
             bg='blackAlpha.200'
             mb={3}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
           <InputGroup size='md' mb={3}>
             <Input
@@ -59,6 +89,8 @@ export default function LoginPage() {
               bg='blackAlpha.200'
               focusBorderColor='yellow.400'
               _placeholder={{ opacity: 1, color: 'gray.500' }}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <InputRightElement width='4.5rem'>
               <Button h='1.75rem' size='sm' onClick={handleClick}>
@@ -66,8 +98,12 @@ export default function LoginPage() {
               </Button>
             </InputRightElement>
           </InputGroup>
-          <button className="bg-gradient-to-r from-gold to-goldEnd rounded-full text-white font-semibold px-6 py-2 md:text-base mb-8">
-            Login
+          <button 
+            disabled={isLoading}
+            onClick={handleLogin}
+            className="bg-gradient-to-r from-gold to-goldEnd rounded-full text-white font-semibold px-6 py-2 md:text-base mb-8"
+          >
+            {isLoading ? "Logging in..." : "Login"}
           </button>
           <p className="text-sm font-medium text-[#808080] mb-10">
             Or login with

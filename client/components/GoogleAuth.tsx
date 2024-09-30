@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, setDoc, getDoc, Timestamp } from "firebase/firestore";
-import { db } from "@/firebaseConfig"; // Your Firebase config file
+import { db } from "@/firebaseConfig";
 import { Icons } from "@/components/icons";
 
 const GoogleAuthComponent = () => {
@@ -18,6 +18,8 @@ const GoogleAuthComponent = () => {
 
       // Save the user to Firestore
       handleFirestoreUser(user);
+
+      // TODO: redirect user after successful login
     } catch (error) {
       console.error("Error signing in with Google:", error);
     } finally {
@@ -35,11 +37,23 @@ const GoogleAuthComponent = () => {
         await setDoc(userDocRef, {
           username: user.displayName,
           email: user.email,
+          photoURL: user.photoURL || null,
           created_at: Timestamp.now(),
         });
         console.log("User profile created in Firestore");
       } else {
-        console.log("User already exists in Firestore");
+        const userData = userDoc.data();
+        // Update user info if it has changed
+        if (userData.username !== user.displayName || userData.email !== user.email) {
+          await setDoc(userDocRef, {
+            username: user.displayName,
+            email: user.email,
+            updated_at: Timestamp.now(),
+          }, { merge: true });
+          console.log("User profile updated in Firestore");
+        } else {
+          console.log("User already exists in Firestore with the same info");
+        }
       }
     } catch (error) {
       console.error("Failed to create or retrieve user profile in Firestore:", error);
