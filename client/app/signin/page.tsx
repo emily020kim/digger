@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from 'next/navigation';
 import doug from '../../public/winking.png';
 import { Input, InputGroup, InputRightElement, Button, useToast } from '@chakra-ui/react';
 import GoogleAuth from "@/components/GoogleAuth";
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
+  const router = useRouter();
 
   const handleClick = () => setShow(!show);
 
@@ -35,6 +37,7 @@ export default function LoginPage() {
       const user = userCredential.user;
       console.log("successful login!");
       // redirect to main application page
+      router.push('/dashboard');
     } catch (error) {
       console.error("Login failed:" , error);
       toast({

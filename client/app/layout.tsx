@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { getCurrentSession } from "@/lib/session";
 import { ChakraProvider } from "@chakra-ui/react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,14 +10,12 @@ export const metadata: Metadata = {
 };
 
 const RootLayout = async ({ children }) => {
-  const session = await getCurrentSession();
-
   return (
     <html lang="en">
       <body>
         <main className="flex flex-col w-full h-full">
           <ChakraProvider>
-            <Navbar session={session} />
+            <Navbar />
             <div className="flex-grow w-full">
               {children}
             </div>

@@ -6,6 +6,7 @@ import { auth, db } from "@/firebaseConfig";
 import { setDoc, doc, Timestamp } from "firebase/firestore";
 
 import Image from "next/image";
+import { useRouter } from 'next/navigation';
 import doug from '../../public/winking.png';
 import { Input, InputGroup, InputRightElement, Button } from '@chakra-ui/react';
 import GoogleAuth from "@/components/GoogleAuth";
@@ -18,6 +19,7 @@ const SignupPage = () => {
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isScreenLarge, setIsScreenLarge] = useState(true);
+  const router = useRouter();
 
   const handleClick = () => setShow(!show);
 
@@ -72,6 +74,7 @@ const SignupPage = () => {
       console.log("User data saved to Firestore");
 
       // TODO: Redirect to application main page after successful signup
+      router.push('/dashboard');
     } catch (err) {
       const errorMessage = err.message;
       const errorCode = err.code;
