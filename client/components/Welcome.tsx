@@ -6,13 +6,13 @@ import { FaArrowRight } from "react-icons/fa";
 const Welcome = () => {
   return (
     <div className='flex flex-col items-center w-full h-screen'>
-      <div className='flex justify-center items-center bg-gold p-4 w-1/3 h-1/3 rounded-md mb-16 mt-24'>
-        <div className='w-1/2'>
-          <h1 className='font-bold text-white text-4xl text-center'>
+      <div className='flex flex-col md:flex-row justify-center items-center bg-gold p-4 w-4/5 md:w-2/3 lg:w-1/2 h-1/4 md:h-1/3 rounded-md mb-16 mt-24'>
+        <div className='flex justify-center items-center w-1/2'>
+          <h1 className='font-bold text-white text-2xl md:text-3xl xl:text-5xl text-center mb-4 md:mb-0'>
             Welcome to Diggr!
           </h1>
         </div>
-        <div className='w-1/2'>
+        <div className='flex items-center justify-center w-1/2'>
           <Image src={doug} width={200} height={200} alt='Character' />
         </div>
       </div>
