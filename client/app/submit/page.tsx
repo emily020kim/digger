@@ -4,9 +4,63 @@ import Image from "next/image";
 import doug from '../../public/winking.png';
 import { Input, Select } from "@chakra-ui/react";
 import { useState } from "react";
+import axios from "axios";
+import { Icons } from "@/components/icons";
+import { db, auth } from '@/firebaseConfig';
+import { collection, addDoc } from 'firebase/firestore';
+
+interface SongData {
+  title: string;
+  artist: string;
+  albumImage: string;
+  audio: string;
+  previewUrl: string;
+}
 
 export default function SongSubmission() { 
   const [link, setLink] = useState("");
+  const [genre, setGenre] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [songData, setSongData] = useState<SongData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    setSongData(null);
+
+    try {
+      // fetch metadata from API
+      const response = await axios.post('/api/metadata', { link });
+      console.log("Fetched song metadata:", response.data);
+      setSongData(response.data);
+
+      // get current user from Firebase Auth
+      const user = auth.currentUser;
+
+      // save the song submission to Firestore
+      if (user) {
+        await addDoc(collection(db, "submissions"), {
+          userId: user.uid,                 
+          songLink: link,                   
+          songTitle: response.data.title,   
+          artist: response.data.artist,     
+          albumImage: response.data.albumImage,  
+          audioPreview: response.data.previewUrl || null,
+          genre: genre,                      
+          submittedAt: new Date().toISOString()  
+        });
+        console.log("Song submission saved to Firestore!");
+      } else {
+        setError("You need to be logged in to submit a song.");
+      }
+    } catch (error) {
+      console.error("Error submitting song:", error);
+      setError('Failed to submit song');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex w-full h-screen">
@@ -39,7 +93,12 @@ export default function SongSubmission() {
           <p className="text-sm xl:text-lg font-medium mb-1">
             Genre of song
           </p>
-          <Select placeholder="Select genre" mb={10}>
+          <Select 
+            placeholder="Select genre" 
+            mb={10}
+            value={genre} 
+            onChange={(e) => setGenre(e.target.value)}
+          >
             <option value="Pop">Pop</option>
             <option value="Rap">Rap</option>
             <option value="Indie">Indie</option>
@@ -47,9 +106,29 @@ export default function SongSubmission() {
             <option value="International">International</option>
             <option value="R&B">R&B</option>
           </Select>
-          <button className="bg-gradient-to-r from-gold to-goldEnd rounded-full text-white font-semibold px-6 py-2 md:text-base mb-8">
-            Submit
+          <button 
+            className="bg-gradient-to-r from-gold to-goldEnd rounded-full text-white font-semibold px-6 py-2 md:text-base mb-8"
+            onClick={handleSubmit}
+          >
+            {loading ? <Icons.spinner className="h-4 w-4 animate-spin" /> : 'Submit'}
           </button>
+
+          {error && <p className="text-red-500">{error}</p>}
+
+          {songData && (
+            <div className="flex flex-col items-center bg-gold rounded-lg my-4 p-3">
+              <h2 className="text-lg font-bold text-white">{songData.title} by {songData.artist}</h2>
+              <img src={songData.albumImage} alt="Album" className="w-24 h-24 mt-4" />
+              {songData.previewUrl && (
+                <audio controls className="w-full mt-4">
+                  <source src={songData.previewUrl} type="audio/mpeg" />
+                </audio>
+              )}
+              <button className="bg-white rounded-full p-2 text-gold text-base font-medium mt-4">
+                Post on leaderboard
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
