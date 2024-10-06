@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import doug from '../../public/winking.png';
 import { Input, Select } from "@chakra-ui/react";
 import { useState } from "react";
@@ -23,6 +24,7 @@ export default function SongSubmission() {
   const [loading, setLoading] = useState(false);
   const [songData, setSongData] = useState<SongData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -40,17 +42,26 @@ export default function SongSubmission() {
 
       // save the song submission to Firestore
       if (user) {
-        await addDoc(collection(db, "submissions"), {
+        const songSubmission = {
           userId: user.uid,                 
           songLink: link,                   
           songTitle: response.data.title,   
           artist: response.data.artist,     
           albumImage: response.data.albumImage,  
           audioPreview: response.data.previewUrl || null,
-          genre: genre,                      
+          genre: genre,     
+          votes: 0,                 
           submittedAt: new Date().toISOString()  
-        });
+        };
+
+        // save to submissions collection
+        await addDoc(collection(db, "submissions"), songSubmission);
         console.log("Song submission saved to Firestore!");
+
+        // add to specfic genre leaderboard
+        const genreCollectionName = `${genre}Leaderboard`;
+        await addDoc(collection(db, genreCollectionName), songSubmission);
+        console.log(`Song submission added to ${genre} leaderboard`);
       } else {
         setError("You need to be logged in to submit a song.");
       }
@@ -64,7 +75,7 @@ export default function SongSubmission() {
 
   return (
     <div className="flex w-full h-screen">
-      <div className="hidden sm:flex flex-col w-1/3 bg-gold justify-center px-4 lg:px-8 xl:px-16">
+      <div className="hidden sm:flex flex-col w-1/3 bg-gold justify-center items-center px-4 lg:px-8 xl:px-16">
         <h1 className="font-bold text-white text-2xl lg:text-3xl xl:text-5xl mb-16">
           Let&apos;s submit your daily song
         </h1>
@@ -72,7 +83,7 @@ export default function SongSubmission() {
           This can be one of your favorite songs or a song you think is criminally underrated
         </p>
       </div>
-      <div className="flex flex-col w-11/12 md:w-2/3 mt-20 md:mt-0 justify-start md:justify-center items-center p-4 lg:p-8 gap-y-8">
+      <div className="flex flex-col w-11/12 md:w-2/3 mt-20 md:mt-0 justify-start md:justify-center items-center p-2 lg:p-8 gap-y-8">
         <div className="w-3/4 lg:w-1/2">
           <div className="flex items-center mb-8">
             <h1 className="text-2xl font-bold mr-2">
@@ -124,7 +135,10 @@ export default function SongSubmission() {
                   <source src={songData.previewUrl} type="audio/mpeg" />
                 </audio>
               )}
-              <button className="bg-white rounded-full p-2 text-gold text-base font-medium mt-4">
+              <button 
+                className="bg-white rounded-full p-2 text-gold text-base font-medium mt-4"
+                onClick={() => router.push(`/leaderboard/${encodeURIComponent(genre.toLowerCase())}`)}
+              >
                 Post on leaderboard
               </button>
             </div>
