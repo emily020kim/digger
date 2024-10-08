@@ -3,9 +3,11 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, setDoc, getDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import { Icons } from "@/components/icons";
+import { useRouter } from "next/navigation";
 
 const GoogleAuthComponent = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const router = useRouter();
 
   const handleGoogleSignIn = async () => {
     const auth = getAuth();
@@ -19,7 +21,7 @@ const GoogleAuthComponent = () => {
       // Save the user to Firestore
       handleFirestoreUser(user);
 
-      // TODO: redirect user after successful login
+      router.push("/dashboard");
     } catch (error) {
       console.error("Error signing in with Google:", error);
     } finally {

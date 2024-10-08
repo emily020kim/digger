@@ -32,15 +32,11 @@ export default function SongSubmission() {
     setSongData(null);
 
     try {
-      // fetch metadata from API
       const response = await axios.post('/api/metadata', { link });
-      console.log("Fetched song metadata:", response.data);
       setSongData(response.data);
 
-      // get current user from Firebase Auth
       const user = auth.currentUser;
 
-      // save the song submission to Firestore
       if (user) {
         const songSubmission = {
           userId: user.uid,                 
@@ -54,11 +50,9 @@ export default function SongSubmission() {
           submittedAt: new Date().toISOString()  
         };
 
-        // save to submissions collection
         await addDoc(collection(db, "submissions"), songSubmission);
         console.log("Song submission saved to Firestore!");
 
-        // add to specfic genre leaderboard
         const genreCollectionName = `${genre}Leaderboard`;
         await addDoc(collection(db, genreCollectionName), songSubmission);
         console.log(`Song submission added to ${genre} leaderboard`);
@@ -92,7 +86,7 @@ export default function SongSubmission() {
             <Image src={doug} width={50} height={50} alt="Character"/>
           </div>
           <p className="text-sm xl:text-lg font-medium mb-1">
-            Paste Spotify, YouTube, or Soundcloud link
+            Paste Spotify link
           </p>
           <Input 
             size='md'
@@ -115,7 +109,7 @@ export default function SongSubmission() {
             <option value="Indie">Indie</option>
             <option value="Band">Band</option>
             <option value="International">International</option>
-            <option value="R&B">R&B</option>
+            <option value="Rnb">Rnb</option>
           </Select>
           <button 
             className="bg-gradient-to-r from-gold to-goldEnd rounded-full text-white font-semibold px-6 py-2 md:text-base mb-8"
@@ -131,13 +125,13 @@ export default function SongSubmission() {
               <h2 className="text-lg font-bold text-white">{songData.title} by {songData.artist}</h2>
               <img src={songData.albumImage} alt="Album" className="w-24 h-24 mt-4" />
               {songData.previewUrl && (
-                <audio controls className="w-full mt-4">
+                <audio controls className="w-full md:w-5/6 xl:w-1/2 mt-4">
                   <source src={songData.previewUrl} type="audio/mpeg" />
                 </audio>
               )}
               <button 
                 className="bg-white rounded-full p-2 text-gold text-base font-medium mt-4"
-                onClick={() => router.push(`/leaderboard/${encodeURIComponent(genre.toLowerCase())}`)}
+                onClick={() => router.push(`/leaderboard/${genre.toLowerCase()}`)}
               >
                 Post on leaderboard
               </button>

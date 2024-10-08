@@ -21,7 +21,8 @@ import { BiSolidUpvote } from "react-icons/bi";
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { db } from '@/firebaseConfig';
-import { getDocs, collection, QuerySnapshot, DocumentData } from 'firebase/firestore';
+import { getAuth } from "firebase/auth";
+import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 
 interface Song {
   songTitle: string;
@@ -32,45 +33,94 @@ interface Song {
   audioPreview: string;
 }
 
+interface User {
+  username: string;
+}
+
 export default function Leaderboard() {
   const router = useRouter();
   const pathname = usePathname();
-  const genre = decodeURIComponent(pathname.split("/")[2]);
+  const genre = pathname.split("/")[2];
   const [songs, setSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(false);
+  const auth = getAuth();
+  const currentUserId = auth.currentUser?.uid;
 
-  // Fetch songs from Firestore based on genre
+  const handleVote = async (songId: string, userId: string) => {
+    try {
+      const votesRef = collection(db, 'votes');
+      const q = query(votesRef, where('userId', '==', userId), where('songId', '==', songId));
+      const querySnapshot = await getDocs(q);
+  
+      if (!querySnapshot.empty) {
+        alert('You have already voted for this song.');
+        return;
+      }
+  
+      await addDoc(votesRef, {
+        userId,
+        songId,
+      });
+  
+      const songRef = doc(db, 'songs', songId);
+      const songSnapshot = await getDoc(songRef);
+  
+      if (songSnapshot.exists()) {
+        const currentVotes = songSnapshot.data().votes || 0;
+        await updateDoc(songRef, {
+          votes: currentVotes + 1,
+        });
+      }
+  
+      setSongs((prevSongs) =>
+        prevSongs.map((song) =>
+          song.songTitle === songId
+            ? { ...song, votes: song.votes + 1 }
+            : song
+        )
+      );
+    } catch (error) {
+      console.error("Error voting:", error);
+    }
+  };
+
   useEffect(() => {
     if (!genre) return;
-
-    const fetchSongs = async () => {
-      setLoading(true);
-      try {
-        const genreCollectionName = `${genre}Leaderboard`;
-        const genreCollectionRef = collection(db, genreCollectionName);
-        const querySnapshot: QuerySnapshot<DocumentData> = await getDocs(genreCollectionRef);
-        
-        const fetchedSongs: Song[] = querySnapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            songTitle: data.songTitle ?? 'Unknown Title',
-            artist: data.artist ?? 'Unknown Artist',
-            albumImage: data.albumImage ?? '/fallback.png',
-            votes: data.votes ?? 0,
-            submittedBy: data.submittedBy ?? 'Anonymous',
-            audioPreview: data.audioPreview ?? '',
-          };
-        });
+  
+    const fetchSongs = () => {
+      const capitalizeFirstLetter = (string: string) => {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+      };
+      
+      const genreCollectionRef = collection(db, `${capitalizeFirstLetter(genre)}Leaderboard`);
+      
+      const unsubscribe = onSnapshot(genreCollectionRef, async (snapshot) => {
+        const fetchedSongs: Song[] = await Promise.all(
+          snapshot.docs.map(async (docSnapshot) => {
+            const data = docSnapshot.data();
+            const userRef = doc(db, 'users', data.userId);
+            const userSnapshot = await getDoc(userRef);
+            const userData = userSnapshot.exists() ? (userSnapshot.data() as User) : { username: 'Anonymous' };
+  
+            return {
+              songTitle: data.songTitle ?? 'Unknown Title',
+              artist: data.artist ?? 'Unknown Artist',
+              albumImage: data.albumImage ?? '/fallback.png',
+              votes: data.votes ?? 0,
+              submittedBy: userData.username,
+              audioPreview: data.audioPreview ?? '',
+            };
+          })
+        );
+  
         setSongs(fetchedSongs);
-      } catch (error) {
-        console.error("Error fetching songs:", error);
-      } finally {
-        setLoading(false);
-      }
+      });
+  
+      return () => unsubscribe();
     };
-
+  
     fetchSongs();
-  }, [genre]);
+  }, [genre]);  
 
   return (
     <div className='flex flex-col w-full h-screen p-8'>
@@ -89,26 +139,15 @@ export default function Leaderboard() {
           <Image src={doug} width={50} height={50} alt='Character' />
         </div>
         <div className='flex items-center'>
-          <Select
-            bg='#FBB902'
-            borderColor='3FBB902'
-            color='white'
-            placeholder='Genre'
-            mr={3}
-          >
-            <option value='option1'>Pop</option>
-            <option value='option2'>Rap</option>
-            <option value='option3'>Band</option>
-            <option value='option4'>Indie</option>
-            <option value='option5'>International</option>
-            <option value='option6'>R&B</option>
+          <Select placeholder='Genre' mr={3} onChange={(e) => router.push(`/leaderboard/${e.target.value.toLowerCase()}`)}>
+            <option value='pop'>Pop</option>
+            <option value='rap'>Rap</option>
+            <option value='band'>Band</option>
+            <option value='indie'>Indie</option>
+            <option value='international'>International</option>
+            <option value='rnb'>Rnb</option>
           </Select>
-          <Select
-            bg='#FBB902'
-            borderColor='#FBB902'
-            color='white'
-            placeholder='Filter'
-          >
+          <Select placeholder='Filter'>
             <option value='option1'>Most votes</option>
             <option value='option2'>Least votes</option>
             <option value='option3'>Most recent</option>
@@ -169,7 +208,11 @@ export default function Leaderboard() {
                   </Td>
                   <Td>
                     <div className='flex items-center mr-2'>
-                      <BiSolidUpvote size={30} className='text-gold mr-2' />
+                      <BiSolidUpvote 
+                        size={30} 
+                        className='text-gold mr-2 hover:scale-110' 
+                        onClick={() => currentUserId ? handleVote(song.songTitle, currentUserId) : alert('Please log in to vote.')}
+                      />
                       <p className='font-bold'>{song.votes}</p>
                     </div>
                   </Td>
