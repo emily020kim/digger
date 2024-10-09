@@ -31,6 +31,7 @@ interface Song {
   votes: number;
   submittedBy: string;
   audioPreview: string;
+  submittedAt: string;
 }
 
 interface User {
@@ -47,6 +48,7 @@ export default function Leaderboard() {
   const [filteredSongs, setFilteredSongs] = useState<Song[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sortCriteria, setSortCriteria] = useState('mostVotes');
   const auth = getAuth();
   const currentUserId = auth.currentUser?.uid;
 
@@ -119,10 +121,12 @@ export default function Leaderboard() {
               votes: voteCount,
               submittedBy: userData.username,
               audioPreview: data.audioPreview ?? '',
+              submittedAt: data.submittedAt,
             };
           })
         );
-  
+        
+        const sortedSongs = fetchedSongs.sort((a, b) => b.votes - a.votes);
         setSongs(fetchedSongs);
         setFilteredSongs(fetchedSongs);
       });
@@ -145,6 +149,21 @@ export default function Leaderboard() {
       setFilteredSongs(filtered);
     }
   }, [searchTerm, songs]);
+
+  useEffect(() => {
+    let sortedSongs = [...songs];
+
+    if (sortCriteria === 'mostVotes') {
+      sortedSongs.sort((a, b) => b.votes - a.votes);
+    } else if (sortCriteria === 'leastVotes') {
+      sortedSongs.sort((a, b) => a.votes - b.votes);
+    } else if (sortCriteria === 'mostRecent') {
+      sortedSongs.sort((a, b) => 
+        (new Date(b.submittedAt || 0).getTime()) - (new Date(a.submittedAt || 0).getTime())
+      );
+    }
+    setFilteredSongs(sortedSongs);
+  }, [sortCriteria, songs]);
 
   return (
     <div className='flex flex-col w-full h-screen p-8'>
@@ -175,10 +194,10 @@ export default function Leaderboard() {
             <option value='international'>International</option>
             <option value='rnb'>Rnb</option>
           </Select>
-          <Select placeholder='Filter'>
-            <option value='option1'>Most votes</option>
-            <option value='option2'>Least votes</option>
-            <option value='option3'>Most recent</option>
+          <Select placeholder='Filter' onChange={(e) => setSortCriteria(e.target.value)}>
+            <option value='mostVotes'>Most votes</option>
+            <option value='leastVotes'>Least votes</option>
+            <option value='mostRecent'>Most recent</option>
           </Select>
         </div>
       </div>
