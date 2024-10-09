@@ -37,17 +37,26 @@ interface User {
   username: string;
 }
 
+const capitalizeFirstLetter = (string: string) => string.charAt(0).toUpperCase() + string.slice(1);
+
 export default function Leaderboard() {
   const router = useRouter();
   const pathname = usePathname();
   const genre = pathname.split("/")[2];
   const [songs, setSongs] = useState<Song[]>([]);
+  const [filteredSongs, setFilteredSongs] = useState<Song[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const auth = getAuth();
   const currentUserId = auth.currentUser?.uid;
 
   const handleVote = async (songId: string, userId: string) => {
     try {
+      const capitalizeFirstLetter = (string: string) => {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+      };
+
+      const genreCollectionName = `${capitalizeFirstLetter(genre)}Leaderboard`;
       const votesRef = collection(db, 'votes');
       const q = query(votesRef, where('userId', '==', userId), where('songId', '==', songId));
       const querySnapshot = await getDocs(q);
@@ -62,7 +71,7 @@ export default function Leaderboard() {
         songId,
       });
   
-      const songRef = doc(db, 'songs', songId);
+      const songRef = doc(db, genreCollectionName, songId);
       const songSnapshot = await getDoc(songRef);
   
       if (songSnapshot.exists()) {
@@ -74,9 +83,7 @@ export default function Leaderboard() {
   
       setSongs((prevSongs) =>
         prevSongs.map((song) =>
-          song.songTitle === songId
-            ? { ...song, votes: song.votes + 1 }
-            : song
+          song.songTitle === songId ? { ...song, votes: song.votes + 1 } : song
         )
       );
     } catch (error) {
@@ -88,10 +95,6 @@ export default function Leaderboard() {
     if (!genre) return;
   
     const fetchSongs = () => {
-      const capitalizeFirstLetter = (string: string) => {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-      };
-      
       const genreCollectionRef = collection(db, `${capitalizeFirstLetter(genre)}Leaderboard`);
       
       const unsubscribe = onSnapshot(genreCollectionRef, async (snapshot) => {
@@ -101,12 +104,19 @@ export default function Leaderboard() {
             const userRef = doc(db, 'users', data.userId);
             const userSnapshot = await getDoc(userRef);
             const userData = userSnapshot.exists() ? (userSnapshot.data() as User) : { username: 'Anonymous' };
+
+            const votesQuery = query(
+              collection(db, 'votes'),
+              where('songId', '==', data.songTitle)
+            );
+            const votesSnapshot = await getDocs(votesQuery);
+            const voteCount = votesSnapshot.size;
   
             return {
               songTitle: data.songTitle ?? 'Unknown Title',
               artist: data.artist ?? 'Unknown Artist',
               albumImage: data.albumImage ?? '/fallback.png',
-              votes: data.votes ?? 0,
+              votes: voteCount,
               submittedBy: userData.username,
               audioPreview: data.audioPreview ?? '',
             };
@@ -114,13 +124,27 @@ export default function Leaderboard() {
         );
   
         setSongs(fetchedSongs);
+        setFilteredSongs(fetchedSongs);
       });
   
       return () => unsubscribe();
     };
   
     fetchSongs();
-  }, [genre]);  
+  }, [genre]);
+
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredSongs(songs);
+    } else {
+      const filtered = songs.filter(
+        (song) =>
+          song.songTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          song.artist.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredSongs(filtered);
+    }
+  }, [searchTerm, songs]);
 
   return (
     <div className='flex flex-col w-full h-screen p-8'>
@@ -128,7 +152,11 @@ export default function Leaderboard() {
         <InputLeftElement pointerEvents='none'>
           <SearchIcon color='gray.300' />
         </InputLeftElement>
-        <Input placeholder='Search for a song' focusBorderColor='yellow.400'/>
+        <Input 
+          placeholder='Search for a song or artist' 
+          focusBorderColor='yellow.400' 
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </InputGroup>
 
       <div className='flex items-center justify-between mb-6'>
@@ -172,7 +200,7 @@ export default function Leaderboard() {
                 <Td colSpan={5}>Loading...</Td>
               </Tr>
             ) : (
-              songs.map((song, index) => (
+              filteredSongs.map((song, index) => (
                 <Tr key={index}>
                   <Td>
                     {index + 1 === 1 ? (
@@ -199,7 +227,7 @@ export default function Leaderboard() {
                       <audio controls>
                         <source src={song.audioPreview} type='audio/mpeg' />
                       </audio>
-                    ) : (
+                    )          : (
                       "No audio available"
                     )}
                   </Td>
@@ -208,7 +236,7 @@ export default function Leaderboard() {
                   </Td>
                   <Td>
                     <div className='flex items-center mr-2'>
-                      <BiSolidUpvote 
+                              <BiSolidUpvote 
                         size={30} 
                         className='text-gold mr-2 hover:scale-110' 
                         onClick={() => currentUserId ? handleVote(song.songTitle, currentUserId) : alert('Please log in to vote.')}
