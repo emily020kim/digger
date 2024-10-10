@@ -55,25 +55,17 @@ const SignupPage = () => {
     if (!validateForm()) return;
 
     try {
-      // Create a new user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Save the username in Firebase Auth's profile
       await updateProfile(user, { displayName: username });
 
-      console.log("User created with username:", username);
-
-      // add user to firestore
       await setDoc(doc(db, "users", user.uid), {
         username: username,
         email: email,
         created_at: Timestamp.now(),
       });
 
-      console.log("User data saved to Firestore");
-
-      // TODO: Redirect to application main page after successful signup
       router.push('/dashboard');
     } catch (err) {
       const errorMessage = err.message;

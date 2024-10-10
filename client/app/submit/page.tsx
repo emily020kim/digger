@@ -51,11 +51,9 @@ export default function SongSubmission() {
         };
 
         await addDoc(collection(db, "submissions"), songSubmission);
-        console.log("Song submission saved to Firestore!");
 
         const genreCollectionName = `${genre}Leaderboard`;
         await addDoc(collection(db, genreCollectionName), songSubmission);
-        console.log(`Song submission added to ${genre} leaderboard`);
       } else {
         setError("You need to be logged in to submit a song.");
       }

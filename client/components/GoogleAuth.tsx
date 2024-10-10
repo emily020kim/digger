@@ -18,7 +18,6 @@ const GoogleAuthComponent = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Save the user to Firestore
       handleFirestoreUser(user);
 
       router.push("/dashboard");
@@ -29,7 +28,6 @@ const GoogleAuthComponent = () => {
     }
   };
 
-  // Create or update user profile in Firestore
   const handleFirestoreUser = async (user) => {
     try {
       const userDocRef = doc(db, "users", user.uid);
@@ -45,7 +43,6 @@ const GoogleAuthComponent = () => {
         console.log("User profile created in Firestore");
       } else {
         const userData = userDoc.data();
-        // Update user info if it has changed
         if (userData.username !== user.displayName || userData.email !== user.email) {
           await setDoc(userDocRef, {
             username: user.displayName,

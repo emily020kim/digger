@@ -35,8 +35,6 @@ export default function LoginPage() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log("successful login!");
-      // redirect to main application page
       router.push('/dashboard');
     } catch (error) {
       console.error("Login failed:" , error);
