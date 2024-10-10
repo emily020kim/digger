@@ -21,13 +21,14 @@ interface SongData {
 export default function SongSubmission() { 
   const [link, setLink] = useState("");
   const [genre, setGenre] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [loadingNavigate, setLoadingNavigate] = useState(false);
   const [songData, setSongData] = useState<SongData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async () => {
-    setLoading(true);
+    setLoadingSubmit(true);
     setError(null);
     setSongData(null);
 
@@ -61,8 +62,13 @@ export default function SongSubmission() {
       console.error("Error submitting song:", error);
       setError('Failed to submit song');
     } finally {
-      setLoading(false);
+      setLoadingSubmit(false);
     }
+  };
+
+  const handleNavigate = async () => {
+    setLoadingNavigate(true);
+    router.push(`/leaderboard/${genre.toLowerCase()}`);
   };
 
   return (
@@ -113,7 +119,7 @@ export default function SongSubmission() {
             className="bg-gradient-to-r from-gold to-goldEnd rounded-full text-white font-semibold px-6 py-2 md:text-base mb-8"
             onClick={handleSubmit}
           >
-            {loading ? <Icons.spinner className="h-4 w-4 animate-spin" /> : 'Submit'}
+            {loadingSubmit ? <Icons.spinner className="h-4 w-4 animate-spin" /> : 'Submit'}
           </button>
 
           {error && <p className="text-red-500">{error}</p>}
@@ -129,9 +135,10 @@ export default function SongSubmission() {
               )}
               <button 
                 className="bg-white rounded-full p-2 text-gold text-base font-medium mt-4"
-                onClick={() => router.push(`/leaderboard/${genre.toLowerCase()}`)}
+                onClick={handleNavigate}
+                disabled={loadingNavigate}
               >
-                Post on leaderboard
+                {loadingNavigate ? 'Posting...' : 'Post on leaderboard'}
               </button>
             </div>
           )}

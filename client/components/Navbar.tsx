@@ -193,7 +193,7 @@ const Navbar = () => {
                   </div>
                   <div className="flex items-center justify-between mb-6">
                     <h1 className="text-lg font-bold">{user?.displayName || "User's name"}</h1>
-                    <p className="text-gray-500 text-sm">{user?.createdAt ? new Date(user.createdAt).getFullYear() : "2024"}</p>
+                    <p className="text-gray-500 text-sm">{user?.createdAt ? new Date(user.createdAt).getFullYear() : "Member since 2024"}</p>
                   </div>
                   <div className="flex items-center justify-between">
                     <Input 

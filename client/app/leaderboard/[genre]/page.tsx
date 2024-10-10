@@ -16,7 +16,7 @@ import {
 import { SearchIcon } from '@chakra-ui/icons';
 import Image from 'next/image';
 import doug from '../../../public/sunglasses.png';
-import { FaMedal } from "react-icons/fa";
+import { FaMedal, FaArrowLeft } from "react-icons/fa";
 import { BiSolidUpvote } from "react-icons/bi";
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -167,6 +167,10 @@ export default function Leaderboard() {
 
   return (
     <div className='flex flex-col w-full h-screen p-8'>
+      <div className='flex items-center mb-3 cursor-pointer' onClick={() => router.push('/submit')}>
+        <FaArrowLeft size={10} className='mr-2'/>
+        <p className='text-sm'>Submit another song</p>
+      </div>
       <InputGroup mt={6} mb={10} w='30%'>
         <InputLeftElement pointerEvents='none'>
           <SearchIcon color='gray.300' />
