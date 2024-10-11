@@ -16,7 +16,7 @@ const GenreCard: React.FC<GenreCardProps> = ({ bgColor, title, description, butt
     <h1 className='text-white font-bold text-2xl lg:text-3xl'>{title}</h1>
     <p className='text-white text-xs lg:text-base'>{description}</p>
     <Link href={link}>
-      <button className={`w-2/3 bg-white rounded-full py-2 ${buttonColor} text-sm md:text-base lg:text-lg font-semibold`}>
+      <button className={`w-2/3 bg-white rounded-full py-2 ${buttonColor} text-sm md:text-base lg:text-lg font-semibold hover:scale-105`}>
         See leaderboard
       </button>
     </Link>
