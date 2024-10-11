@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react";
-
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import doug1 from "../public/mouth_open.png";
 import Description from "./Description";
@@ -10,6 +10,7 @@ import Join from "./Join";
 
 const Landing = () => {
   const [size, setSize] = useState(300);
+  const router = useRouter();
 
   useEffect(() => {
     const handleResize = () => {
@@ -37,7 +38,10 @@ const Landing = () => {
           <h1 className="font-bold text-2xl md:text-4xl lg:text-5xl tracking-wider leading-relaxed">
             Bored of your playlist? That&apos;s where <span className="text-gold">Diggr</span> comes in
           </h1>
-          <button className='w-1/2 xl:w-1/3 py-2 px-4 md:py-2 md:px-5 text-white font-semibold bg-gradient-to-r from-gold to-goldEnd rounded-full text-sm md:text-base lg:text-lg'>
+          <button 
+            className='w-1/2 xl:w-1/3 py-2 px-4 md:py-2 md:px-5 text-white font-semibold bg-gradient-to-r from-gold to-goldEnd rounded-full text-sm md:text-base lg:text-lg'
+            onClick={() => router.push('/signup')}
+          >
             Start Digging
           </button>
         </div>
