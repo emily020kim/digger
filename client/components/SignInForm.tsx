@@ -17,7 +17,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         className="flex items-center justify-center gap-2 bg-zinc-800 text-white rounded-md py-2 px-4"
         onClick={() => {
           setIsGoogleLoading(true)
-          signIn("google", {callbackUrl: "http://localhost:3000/"})
+          signIn("google", {callbackUrl: "https://diggr.vercel.app/"})
         }}
         disabled={isLoading || isGoogleLoading}
       >
