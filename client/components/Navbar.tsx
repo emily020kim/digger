@@ -95,6 +95,7 @@ const Navbar = () => {
         const userProfile = await fetchUserProfile(currentUser.uid);
 
         if (userProfile) {
+          console.log("User profile photoURL:", userProfile.photoURL);
           setUser({
             ...currentUser,
             displayName: userProfile.displayName || currentUser.displayName,
@@ -102,6 +103,7 @@ const Navbar = () => {
             createdAt: userProfile.createdAt,
           });
         } else {
+          console.log("User photoURL from Firebase auth:", currentUser.photoURL);
           setUser(currentUser);
         }
       } else {
@@ -114,7 +116,6 @@ const Navbar = () => {
 
   const handleUploadProfilePicture = async (file: File) => {
     try {
-      const auth = getAuth();
       const currentUser = auth.currentUser;
   
       if (!currentUser) {
@@ -128,16 +129,11 @@ const Navbar = () => {
   
       const downloadURL = await getDownloadURL(storageRef);
   
-      console.log('File uploaded successfully. URL:', downloadURL);
-  
       await updateProfile(currentUser, { photoURL: downloadURL });
-  
       const userDocRef = doc(db, 'users', currentUser.uid);
       await updateDoc(userDocRef, { photoURL: downloadURL });
-  
+
       setUser(prevUser => prevUser ? { ...prevUser, photoURL: downloadURL } : prevUser);
-  
-      console.log('Profile picture updated successfully!');
     } catch (error) {
       console.error("Error uploading and updating profile picture:", error);
     }

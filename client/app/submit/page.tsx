@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import doug from '../../public/winking.png';
@@ -9,6 +10,7 @@ import axios from "axios";
 import { Icons } from "@/components/icons";
 import { db, auth } from '@/firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SongData {
   title: string;
@@ -19,6 +21,7 @@ interface SongData {
 }
 
 export default function SongSubmission() { 
+  const { user, loading } = useAuth();
   const [link, setLink] = useState("");
   const [genre, setGenre] = useState("");
   const [loadingSubmit, setLoadingSubmit] = useState(false);
@@ -26,6 +29,16 @@ export default function SongSubmission() {
   const [songData, setSongData] = useState<SongData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/signin');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
 
   const handleSubmit = async () => {
     setLoadingSubmit(true);

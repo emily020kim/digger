@@ -22,6 +22,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { db } from '@/firebaseConfig';
 import { getAuth } from "firebase/auth";
+import { useAuth } from '@/hooks/useAuth';
 import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 
 interface Song {
@@ -41,16 +42,25 @@ interface User {
 const capitalizeFirstLetter = (string: string) => string.charAt(0).toUpperCase() + string.slice(1);
 
 export default function Leaderboard() {
+  const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const genre = pathname.split("/")[2];
   const [songs, setSongs] = useState<Song[]>([]);
   const [filteredSongs, setFilteredSongs] = useState<Song[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loadingTable, setLoadingTable] = useState(false);
   const [sortCriteria, setSortCriteria] = useState('mostVotes');
   const auth = getAuth();
   const currentUserId = auth.currentUser?.uid;
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.push('/signin');
+    }
+  }, [user, loading, router]);
 
   const handleVote = async (songId: string, userId: string) => {
     try {
@@ -218,7 +228,7 @@ export default function Leaderboard() {
             </Tr>
           </Thead>
           <Tbody>
-            {loading ? (
+            {loadingTable ? (
               <Tr>
                 <Td colSpan={5}>Loading...</Td>
               </Tr>
@@ -259,7 +269,7 @@ export default function Leaderboard() {
                   </Td>
                   <Td>
                     <div className='flex items-center mr-2'>
-                              <BiSolidUpvote 
+                      <BiSolidUpvote 
                         size={30} 
                         className='text-gold mr-2 hover:scale-110' 
                         onClick={() => currentUserId ? handleVote(song.songTitle, currentUserId) : alert('Please log in to vote.')}

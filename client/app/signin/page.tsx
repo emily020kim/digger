@@ -8,8 +8,10 @@ import { Input, InputGroup, InputRightElement, Button, useToast } from '@chakra-
 import GoogleAuth from "@/components/GoogleAuth";
 import { auth } from "@/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
+  const { user, loading } = useAuth();
   const [show, setShow] = useState(false);
   const [isScreenLarge, setIsScreenLarge] = useState(true);
   const [email, setEmail] = useState('');
@@ -19,6 +21,12 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleClick = () => setShow(!show);
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -49,6 +57,10 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  if (loading || user) {
+    return <p>Loading...</p>;
+  }
 
   return (
     <div className="flex w-full h-screen items-center justify-center">
