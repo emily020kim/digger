@@ -81,7 +81,10 @@ export default function LoginPage() {
             <p className="text-[#808080] text-sm mr-2">
               Don&apos;t have an account?
             </p>
-            <a className="text-gold underline text-sm">
+            <a 
+              className="text-gold underline text-sm"
+              href="/signup"
+            >
               Sign Up
             </a>
           </div>
