@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, User } from "firebase/auth";
 import { doc, setDoc, getDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import { Icons } from "@/components/icons";
@@ -28,7 +28,7 @@ const GoogleAuthComponent = () => {
     }
   };
 
-  const handleFirestoreUser = async (user) => {
+  const handleFirestoreUser = async (user: User) => {
     try {
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);

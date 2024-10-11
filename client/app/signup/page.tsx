@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "@/firebaseConfig";
 import { setDoc, doc, Timestamp } from "firebase/firestore";
+import { FirebaseError } from "firebase/app";
 
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
@@ -33,7 +34,6 @@ const SignupPage = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // validate email and password
   const validateForm = () => {
     if (!email.includes("@")) {
       setErrorMessage("Please enter a valid email address.");
@@ -48,8 +48,7 @@ const SignupPage = () => {
     return true;
   };
 
-  // Handle user sign up with email and password
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!validateForm()) return;
@@ -68,27 +67,31 @@ const SignupPage = () => {
 
       router.push('/dashboard');
     } catch (err) {
-      const errorMessage = err.message;
-      const errorCode = err.code;
-
       setError(true);
 
-      switch (errorCode) {
-        case "auth/weak-password":
-          setErrorMessage("The password is too weak.");
-          break;
-        case "auth/email-already-in-use":
-          setErrorMessage("This email address is already in use by another account.");
-          break;
-        case "auth/invalid-email":
-          setErrorMessage("This email address is invalid.");
-          break;
-        case "auth/operation-not-allowed":
-          setErrorMessage("Email/password accounts are not enabled.");
-          break;
-        default:
-          setErrorMessage(errorMessage);
-          break;
+      if (err instanceof FirebaseError) {
+        const errorMessage = err.message;
+        const errorCode = err.code;
+
+        switch (errorCode) {
+          case "auth/weak-password":
+            setErrorMessage("The password is too weak.");
+            break;
+          case "auth/email-already-in-use":
+            setErrorMessage("This email address is already in use by another account.");
+            break;
+          case "auth/invalid-email":
+            setErrorMessage("This email address is invalid.");
+            break;
+          case "auth/operation-not-allowed":
+            setErrorMessage("Email/password accounts are not enabled.");
+            break;
+          default:
+            setErrorMessage(errorMessage);
+            break;
+        }
+      } else {
+        setErrorMessage("An unknown error occurred.");
       }
     }
   };

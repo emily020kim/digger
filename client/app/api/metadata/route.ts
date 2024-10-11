@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import axios from 'axios';
 
 const getSpotifyToken = async () => {
@@ -19,7 +19,7 @@ const getSpotifyToken = async () => {
   return response.data.access_token;
 };
 
-export async function POST(request) {
+export async function POST(request: NextRequest) {
   const { link } = await request.json();
 
   try {

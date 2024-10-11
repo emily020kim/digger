@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ReactNode } from "react";
 import { ChakraProvider } from "@chakra-ui/react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   description: "Discover underground songs!",
 };
 
-const RootLayout = async ({ children }) => {
+const RootLayout = async ({ children }: { children: ReactNode }) => {
   return (
     <html lang="en">
       <body>

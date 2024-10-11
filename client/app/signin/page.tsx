@@ -44,11 +44,12 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Login failed:" , error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       toast({
         title: "Login failed",
-        description: error.message,
+        description: errorMessage,
         status: "error",
         duration: 5000,
         isClosable: true,

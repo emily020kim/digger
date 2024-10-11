@@ -26,12 +26,16 @@ type UserProfile = {
   createdAt?: any;
 };
 
+type ExtendedUser = User & {
+  createdAt?: any;
+};
+
 const Navbar = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [width, setWidth] = useState(100);
   const [height, setHeight] = useState(75);
   const [isMobileView, setIsMobileView] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
   const [newDisplayName, setNewDisplayName] = useState("");
 
   useEffect(() => {
@@ -183,7 +187,11 @@ const Navbar = () => {
                         type="file" 
                         accept="image/*" 
                         className="hidden"
-                        onChange={(e) => handleUploadProfilePicture(e.target.files[0])}
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files.length > 0) {
+                            handleUploadProfilePicture(e.target.files[0]);
+                          }
+                        }}
                       />
                     </label>
                   </div>
