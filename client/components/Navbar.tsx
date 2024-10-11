@@ -162,7 +162,7 @@ const Navbar = () => {
 
   return (
     <div className='flex w-full py-4 shadow-lg justify-around'>
-      <Link href='/'>
+      <Link href={user ? '/dashboard' : '/'}>
         <Image src={logo} width={width} height={height} alt='Logo' />
       </Link>
       {user ? (

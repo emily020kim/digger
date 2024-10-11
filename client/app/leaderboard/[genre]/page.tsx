@@ -12,12 +12,19 @@ import {
   InputGroup,
   InputLeftElement,
   Select,
+  Popover,
+  PopoverTrigger,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverContent,
+  PopoverBody,
 } from '@chakra-ui/react';
 import { SearchIcon } from '@chakra-ui/icons';
 import Image from 'next/image';
 import doug from '../../../public/sunglasses.png';
 import { FaMedal, FaArrowLeft } from "react-icons/fa";
 import { BiSolidUpvote } from "react-icons/bi";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { db } from '@/firebaseConfig';
@@ -176,12 +183,12 @@ export default function Leaderboard() {
   }, [sortCriteria, songs]);
 
   return (
-    <div className='flex flex-col w-full h-screen p-8'>
+    <div className='flex flex-col w-full h-screen p-2 lg:p-8'>
       <div className='flex items-center mb-3 cursor-pointer' onClick={() => router.push('/submit')}>
         <FaArrowLeft size={10} className='mr-2'/>
         <p className='text-sm'>Submit another song</p>
       </div>
-      <InputGroup mt={6} mb={10} w='30%'>
+      <InputGroup mt={6} mb={10} w={['100%', '50%', '40%']}>
         <InputLeftElement pointerEvents='none'>
           <SearchIcon color='gray.300' />
         </InputLeftElement>
@@ -192,15 +199,20 @@ export default function Leaderboard() {
         />
       </InputGroup>
 
-      <div className='flex items-center justify-between mb-6'>
+      <div className='flex flex-col md:flex-row items-center justify-between mb-6'>
         <div className='flex items-center'>
-          <h1 className='text-4xl font-bold mr-2'>
+          <h1 className='text-2xl md:text-3xl lg:text-4xl font-bold mr-1 md:mr-2'>
             Leaderboard
           </h1>
-          <Image src={doug} width={50} height={50} alt='Character' />
+          <Image src={doug} width={40} height={40} alt='Character' />
         </div>
         <div className='flex items-center'>
-          <Select placeholder='Genre' mr={3} onChange={(e) => router.push(`/leaderboard/${e.target.value.toLowerCase()}`)}>
+          <Select 
+            placeholder='Genre' 
+            mr={[1, 3, 3]} 
+            onChange={(e) => router.push(`/leaderboard/${e.target.value.toLowerCase()}`)}
+            size={['xs', 'md', 'md']}
+          >
             <option value='pop'>Pop</option>
             <option value='rap'>Rap</option>
             <option value='band'>Band</option>
@@ -208,7 +220,11 @@ export default function Leaderboard() {
             <option value='international'>International</option>
             <option value='rnb'>Rnb</option>
           </Select>
-          <Select placeholder='Filter' onChange={(e) => setSortCriteria(e.target.value)}>
+          <Select 
+            placeholder='Filter' 
+            onChange={(e) => setSortCriteria(e.target.value)}
+            size={['xs', 'md', 'md']}
+          >
             <option value='mostVotes'>Most votes</option>
             <option value='leastVotes'>Least votes</option>
             <option value='mostRecent'>Most recent</option>
@@ -222,9 +238,12 @@ export default function Leaderboard() {
             <Tr>
               <Th>Rank</Th>
               <Th>Song</Th>
-              <Th>Audio preview</Th>
-              <Th>Submitted by</Th>
+              <Th display={['none', 'none', 'table-cell']}>Audio preview</Th>
+              <Th display={['none', 'none', 'table-cell']}>Submitted by</Th>
               <Th>Votes</Th>
+              <Th display={['table-cell', 'table-cell', 'none']}>
+                <BsThreeDotsVertical size={15}/>
+              </Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -248,34 +267,56 @@ export default function Leaderboard() {
                   </Td>
                   <Td>
                     <div className='flex items-center'>
-                      <Image src={song.albumImage} width={50} height={50} alt='Album cover' />
+                      <Image src={song.albumImage} width={45} height={45} alt='Album cover' />
                       <div className='flex flex-col ml-2'>
-                        <h1 className='text-xl font-bold mb-2'>{song.songTitle}</h1>
-                        <h2 className='text-base font-medium'>{song.artist}</h2>
+                        <h1 className='text-sm md:text-base lg:text-xl font-bold mb-2'>{song.songTitle}</h1>
+                        <h2 className='text-sm lg:text-base font-medium'>{song.artist}</h2>
                       </div>
                     </div>
                   </Td>
-                  <Td>
+                  <Td display={['none', 'none', 'table-cell']}>
                     {song.audioPreview ? (
                       <audio controls>
                         <source src={song.audioPreview} type='audio/mpeg' />
                       </audio>
-                    )          : (
+                    ) : (
                       "No audio available"
                     )}
                   </Td>
-                  <Td>
-                    <h1 className='text-base font-medium'>{song.submittedBy}</h1>
+                  <Td display={['none', 'none', 'table-cell']}>
+                    <h1 className='text-sm lg:text-base font-medium'>{song.submittedBy}</h1>
                   </Td>
                   <Td>
                     <div className='flex items-center mr-2'>
                       <BiSolidUpvote 
-                        size={30} 
+                        size={25} 
                         className='text-gold mr-2 hover:scale-110' 
                         onClick={() => currentUserId ? handleVote(song.songTitle, currentUserId) : alert('Please log in to vote.')}
                       />
                       <p className='font-bold'>{song.votes}</p>
                     </div>
+                  </Td>
+                  <Td display={['table-cell', 'table-cell', 'none']}>
+                    <Popover placement="bottom" trigger="click">
+                      <PopoverTrigger>
+                        <div>
+                          <BsThreeDotsVertical size={15}/>
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent>
+                        <PopoverArrow />
+                        <PopoverCloseButton />
+                        <PopoverBody mt={4}>
+                          {song.audioPreview ? (
+                            <audio controls>
+                              <source src={song.audioPreview} type='audio/mpeg' />
+                            </audio>
+                          ) : (
+                            "No audio available"
+                          )}
+                        </PopoverBody>
+                      </PopoverContent>
+                    </Popover>
                   </Td>
                 </Tr>
               ))
