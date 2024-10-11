@@ -13,6 +13,9 @@ export const metadata: Metadata = {
 const RootLayout = async ({ children }: { children: ReactNode }) => {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" type="image/svg+xml" href="/doug.svg" />
+      </head>
       <body>
         <main className="flex flex-col w-full h-full">
           <ChakraProvider>
